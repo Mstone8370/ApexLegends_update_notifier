@@ -146,6 +146,9 @@ def main():
         if WATCH_GOG:
             gog.check_update()
 
+        if (CHECK_INTERVAL_SEC <= 0):
+            break
+        
         logger.info("Will sleep {} seconds".format(CHECK_INTERVAL_SEC))
         time.sleep(CHECK_INTERVAL_SEC)
 
