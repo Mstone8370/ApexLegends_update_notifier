@@ -4,3 +4,5 @@ cache
 modules/__pycache__
 
 .env
+
+venv/
