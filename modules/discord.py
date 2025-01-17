@@ -19,15 +19,15 @@ class Discord:
 
         _mention = ""
         for _role_id in self.role_ids:
-            _mention += "<@&{}> ".format(_role_id)
+            _mention += "@&{} ".format(_role_id)
         for _user_id in self.user_ids:
-            _mention += "<@{}> ".format(_user_id)
+            _mention += "@{} ".format(_user_id)
 
         _description = "{}\n".format(_mention)
         _description += "Updates have been detected on {}".format(self.platform)
 
         _embed = DiscordEmbed(
-            title="🚨 UPDATES ARE COMING",
+            title="🚨 Apex 레전드 업데이트",
             description=_description,
             color=self.embed_color,
         )
@@ -40,11 +40,10 @@ class Discord:
             )
 
         _embed.set_thumbnail(url=self.thumb_url)
-        _embed.add_embed_field(name="🎮 Updated Games", value=_apps)
         _embed.add_embed_field(
-            name="🕑 Checked at", value=timestamp.strftime("%Y/%m/%d %H:%M:%S")
+            name="🕑 확인한 시간", value=timestamp.strftime("%Y/%m/%d %H:%M:%S")
         )
-        _embed.set_footer(text="Notified by Game Update Notifier")
+        _embed.set_footer(text="Notified by Apex Legends Update Notifier")
         _embed.set_timestamp()
 
         return _embed
