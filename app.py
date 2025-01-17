@@ -79,7 +79,7 @@ def main():
             user_ids=DISCORD_MENTION_USER_IDS,
             platform="Steam",
             thumb_url=(
-                "https://github.com/kurokobo/game-update-notifier/raw/main/"
+                "https://github.com/Mstone8370/ApexLegends_update_notifier/raw/main/"
                 "assets/nessie.png"
             ),
             embed_color="1e90ff",
