@@ -6,3 +6,5 @@ modules/__pycache__
 .env
 
 venv/
+
+*.bat
