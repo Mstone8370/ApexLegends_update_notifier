@@ -80,7 +80,7 @@ def main():
             platform="Steam",
             thumb_url=(
                 "https://github.com/Mstone8370/ApexLegends_update_notifier/raw/main/"
-                "assets/nessie.png"
+                "assets/Apex.png"
             ),
             embed_color="1e90ff",
         )
