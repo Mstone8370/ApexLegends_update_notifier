@@ -82,7 +82,7 @@ def main():
                 "https://github.com/Mstone8370/ApexLegends_update_notifier/raw/main/"
                 "assets/Apex.png"
             ),
-            embed_color="1e90ff",
+            embed_color="bc423d",
         )
         steam = Steam(STEAM_APP_IDS, steam_notifier, IGNORE_FIRST_NOTIFICATION)
 
