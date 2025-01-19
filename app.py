@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+import pytz
 from datetime import datetime
 from os.path import dirname, join
 
@@ -27,6 +28,7 @@ def main():
 
     IGNORE_FIRST_NOTIFICATION = os.getenv("IGNORE_FIRST_NOTIFICATION").lower() == "true"
     CHECK_INTERVAL_SEC = int(os.getenv("CHECK_INTERVAL_SEC"))
+    TIME_ZONE = os.getenv("TIME_ZONE")
 
     WATCH_STEAM = os.getenv("WATCH_STEAM").lower() == "true"
     STEAM_APP_IDS = [
@@ -72,6 +74,15 @@ def main():
     current_path = os.path.dirname(os.path.abspath(__file__))
     os.chdir(current_path)
 
+    timezone = None
+    try:
+        timezone = pytz.timezone(TIME_ZONE)
+    except pytz.exceptions.UnknownTimeZoneError as te:
+        logger.error("Unknown Time Zone Error: %s", te)
+    except Exception as e:
+        logger.error(e, stack_info=True, exc_info=True)
+    logger.info("Time zone: %s", timezone)
+
     if WATCH_STEAM:
         steam_notifier = Discord(
             webhook_url=DISCORD_WEBHOOK_URL,
@@ -84,7 +95,7 @@ def main():
             ),
             embed_color="bc423d",
         )
-        steam = Steam(STEAM_APP_IDS, steam_notifier, IGNORE_FIRST_NOTIFICATION)
+        steam = Steam(STEAM_APP_IDS, steam_notifier, IGNORE_FIRST_NOTIFICATION, timezone)
 
     if WATCH_MSSTORE:
         msstore_notifier = Discord(
