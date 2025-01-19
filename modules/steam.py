@@ -21,6 +21,8 @@ class Steam:
         self.client = SteamClient()
         self.timestamp = None
 
+        self.bucket_name = "update-cache"
+
         utils.create_directory("./cache/steam")
         self.cache = Cache(
             "./cache/steam/latest_data.json", # 가장 최근의 raw 데이터. (서버인 경우 계속 실행중인 경우에만 유효함. 단발성 실행인 경우에는 비어있음.)
@@ -30,7 +32,16 @@ class Steam:
         )
 
         self.old_result = {}
-        self.new_result = utils.load_json_as_dict(self.cache.result) # 기존의 캐시 파일을 로드
+        # self.new_result = utils.load_json_as_dict(self.cache.result) # 기존의 캐시 파일을 로드
+        try:
+            self.new_result = utils.load_json_as_dict_from_GCS(self.bucket_name, self.cache.result)
+            if self.new_result:
+                self.logger.info("Loaded previous result from Google Cloud Storage")
+            else:
+                self.logger.info("No previous result found in Google Cloud Storage")
+        except Exception as e:
+            self.logger.error(e, stack_info=True, exc_info=True)
+            return
 
         self.ignore_first = ignore_first
 
@@ -99,7 +110,7 @@ class Steam:
         self.logger.info("Cache raw data as {}".format(self.cache.tmp_data))
         utils.save_dict_as_json(_product_info, self.cache.tmp_data) # 받아온 raw 데이터를 파일로 임시로 로컬에 저장
 
-        self.old_result = copy.copy(self.new_result) # TODO: 생성자에서 이미 복사해서 다시 할 이유는 없을듯.
+        # self.old_result = copy.copy(self.new_result) # 생성자에서 이미 복사해서 다시 할 이유는 없을듯.
         for _app in self.apps:
             key = _app.id + ":" + _app.filter
             self.logger.info(
@@ -158,18 +169,29 @@ class Steam:
                 utils.replace_file(self.cache.latest_data, self.cache.old_data) # latest였던 데이터를 old 데이터로 변경.
 
         self.logger.info("Cache filtered data as {}".format(self.cache.result))
-        utils.save_dict_as_json(self.new_result, self.cache.result) # 새로운 result를 파일로 저장. TODO: 클라우드에 저장되게 변경해야함
-        utils.replace_file(self.cache.tmp_data, self.cache.latest_data) # 이번에 받아온 데이터인 tmp 파일을 latest 파일로 변경.
+        # utils.save_dict_as_json(self.new_result, self.cache.result) # 새로운 result를 파일로 저장.
+        try:
+            utils.save_dict_as_json_to_GCS(self.new_result, self.bucket_name, self.cache.result)
+            self.logger.info("Saved latest result to Google Cloud Storage")
+        except Exception as e:
+            raise e
+        finally:
+            utils.replace_file(self.cache.tmp_data, self.cache.latest_data) # 이번에 받아온 데이터인 tmp 파일을 latest 파일로 변경.
 
         return _is_updated, _updated_apps
 
     def check_update(self):
+        """
+        app.py 에서 호출되는 함수
+
+        Return value: exit code
+        """
         try:
             self.timestamp = datetime.now(self.timezone)
 
             if not self.login():
                 self.logger.error("Failed to log in to Steam")
-                return
+                return 0
 
             _is_updated, updated_apps = self.is_updated()
 
@@ -185,10 +207,10 @@ class Steam:
             else:
                 self.logger.info("No update detected.")
 
-            return
+            return 0
         except Exception as e:
             self.logger.error(e, stack_info=True, exc_info=True)
-            return
+            return 1
         finally:
             self.logout()
 

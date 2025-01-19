@@ -142,27 +142,31 @@ def main():
         )
         gog = GOG(GOG_APP_IDS, gog_notifier, IGNORE_FIRST_NOTIFICATION)
 
+    exit_code = 0
     while True:
         logger.info("Loop start: {}".format(datetime.now()))
 
         if WATCH_STEAM:
-            steam.check_update()
+            exit_code |= steam.check_update()
 
         if WATCH_MSSTORE:
-            msstore.check_update()
+            exit_code |= msstore.check_update()
 
         if WATCH_EPICGAMES:
-            epicgames.check_update()
+            exit_code |= epicgames.check_update()
 
         if WATCH_GOG:
-            gog.check_update()
+            exit_code |= gog.check_update()
 
-        if (CHECK_INTERVAL_SEC <= 0):
+        if CHECK_INTERVAL_SEC <= 0 or exit_code != 0:
             break
         
         logger.info("Will sleep {} seconds".format(CHECK_INTERVAL_SEC))
         time.sleep(CHECK_INTERVAL_SEC)
+    
+    return exit_code
 
 
 if __name__ == "__main__":
-    main()
+    exit_code = main()
+    exit(exit_code)
