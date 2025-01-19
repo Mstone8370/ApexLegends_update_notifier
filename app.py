@@ -94,6 +94,7 @@ def main():
                 "assets/Apex.png"
             ),
             embed_color="bc423d",
+            time_zone=timezone
         )
         steam = Steam(STEAM_APP_IDS, steam_notifier, IGNORE_FIRST_NOTIFICATION, timezone)
 

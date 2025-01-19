@@ -28,12 +28,11 @@ class Steam:
             "./cache/steam/latest_data.json", # 가장 최근의 raw 데이터. (서버인 경우 계속 실행중인 경우에만 유효함. 단발성 실행인 경우에는 비어있음.)
             "./cache/steam/old_data.json", # 오래된 raw 데이터를 하나만 저장함. 읽지 않음.
             "./cache/steam/tmp_data.json", # 가장 최근 받아온 raw 데이터를 임시로 저장함.
-            "./cache/steam/latest_result.json", # 가장 최근 결과를 정제한 데이터.
+            "cache/steam/latest_result.json", # 가장 최근 결과를 정제한 데이터.
         )
 
         self.old_result = {}
-        # self.new_result = utils.load_json_as_dict(self.cache.result) # 기존의 캐시 파일을 로드
-        try:
+        try: # 기존의 캐시 파일을 로드
             self.new_result = utils.load_json_as_dict_from_GCS(self.bucket_name, self.cache.result)
             if self.new_result:
                 self.logger.info("Loaded previous result from Google Cloud Storage")
@@ -63,8 +62,9 @@ class Steam:
                         name=self.new_result[_app_id]["app"]["name"],
                     ),
                     data=self.new_result[_app_id]["data"],
-                    last_checked=self.new_result[_app_id]["last_checked"],
-                    last_updated=self.new_result[_app_id]["last_updated"],
+                    last_checked=self.new_result[_app_id]["last_checked"], # 마지막으로 확인한 시간
+                    last_updated=self.new_result[_app_id]["last_updated"], # 확인했을 때 업데이트가 있었던 마지막 시간
+                    build_id=self.new_result[_app_id]["build_id"],
                 )
 
                 # disable ignore_first because we're loading from a cached state
@@ -110,7 +110,7 @@ class Steam:
         self.logger.info("Cache raw data as {}".format(self.cache.tmp_data))
         utils.save_dict_as_json(_product_info, self.cache.tmp_data) # 받아온 raw 데이터를 파일로 임시로 로컬에 저장
 
-        # self.old_result = copy.copy(self.new_result) # 생성자에서 이미 복사해서 다시 할 이유는 없을듯.
+        self.old_result = copy.copy(self.new_result) # 단발성인 경우 생성자에서 이미 복사해서 다시 할 이유는 없을듯.
         for _app in self.apps:
             key = _app.id + ":" + _app.filter
             self.logger.info(
@@ -133,6 +133,7 @@ class Steam:
                 ]["timeupdated"],
                 last_checked=self.timestamp,
                 last_updated=_last_updated,
+                build_id=_product_info["apps"][int(_app.id)]["depots"]["branches"][_app.filter]["buildid"]
             )
 
         return
@@ -146,7 +147,7 @@ class Steam:
         self.gather_app_info()
 
         _is_updated = False
-        _updated_apps = []
+        _updated_keys = []
 
         for _app in self.apps:
             key = _app.id + ":" + _app.filter
@@ -163,14 +164,13 @@ class Steam:
 
                 self.logger.info("New data: {}".format(self.new_result[key].data))
                 _is_updated = True
-                _updated_apps.append(self.new_result[key].app)
+                _updated_keys.append(key)
 
                 self.new_result[key].last_updated = self.timestamp
                 utils.replace_file(self.cache.latest_data, self.cache.old_data) # latest였던 데이터를 old 데이터로 변경.
 
         self.logger.info("Cache filtered data as {}".format(self.cache.result))
-        # utils.save_dict_as_json(self.new_result, self.cache.result) # 새로운 result를 파일로 저장.
-        try:
+        try: # 새로운 result를 파일로 저장.
             utils.save_dict_as_json_to_GCS(self.new_result, self.bucket_name, self.cache.result)
             self.logger.info("Saved latest result to Google Cloud Storage")
         except Exception as e:
@@ -178,7 +178,7 @@ class Steam:
         finally:
             utils.replace_file(self.cache.tmp_data, self.cache.latest_data) # 이번에 받아온 데이터인 tmp 파일을 latest 파일로 변경.
 
-        return _is_updated, _updated_apps
+        return _is_updated, _updated_keys
 
     def check_update(self):
         """
@@ -193,7 +193,7 @@ class Steam:
                 self.logger.error("Failed to log in to Steam")
                 return 0
 
-            _is_updated, updated_apps = self.is_updated()
+            _is_updated, _updated_keys = self.is_updated()
 
             if _is_updated:
                 if self.ignore_first:
@@ -203,7 +203,7 @@ class Steam:
                     self.ignore_first = False
                 else:
                     self.logger.info("Update detected, will fire notifying")
-                    self.notifier.fire(updated_apps, self.timestamp)
+                    self.notifier.fire(_updated_keys, self.timestamp, self.new_result)
             else:
                 self.logger.info("No update detected.")
 

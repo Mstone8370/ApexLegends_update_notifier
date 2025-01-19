@@ -8,3 +8,6 @@ modules/__pycache__
 venv/
 
 *.bat
+
+download.py
+*.json

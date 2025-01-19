@@ -16,11 +16,12 @@ class Cache:
 
 
 class Result:
-    def __init__(self, app, data, last_checked, last_updated=None):
+    def __init__(self, app, data, last_checked, last_updated=None, build_id=None):
         self.app = app
         self.data = data
         self.last_checked = last_checked
         self.last_updated = last_updated
+        self.build_id = build_id
 
 
 class App:
@@ -46,6 +47,7 @@ def json_default(o):
                 "id": o.app.id,
                 "name": o.app.name,
             },
+            "build_id": o.build_id,
             "data": o.data,
             "last_checked": o.last_checked.isoformat(),
             "last_updated": _last_updated,
