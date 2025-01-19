@@ -1,5 +1,4 @@
 import logging
-import pytz
 
 from datetime import datetime
 from discord_webhook import DiscordEmbed, DiscordWebhook
