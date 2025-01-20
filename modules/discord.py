@@ -37,15 +37,12 @@ class Discord:
         for key in updated_keys:
             if key not in result:
                 continue
-            _update_details += "`{}` 업데이트 시간: `{}`".format(
-                result[key].build_id,
-                self.unix_time_to_datetime(result[key].data).strftime("%Y/%m/%d %H:%M:%S"),
-            )
+            _update_details += "Build ID: `{}`\n".format(result[key].build_id)
 
         _embed.set_thumbnail(url=self.thumb_url)
         _embed.add_embed_field(name="🛠️ 업데이트 정보", value=_update_details, inline=False)
         _embed.add_embed_field(
-            name="🕑 확인한 시간", value=timestamp.strftime("%Y/%m/%d %H:%M:%S")
+            name="🕑 업데이트 시간", value="`{}`".format(self.unix_time_to_datetime(result[key].data).strftime("%Y/%m/%d %H:%M:%S"))
         )
         _embed.set_footer(text="Notified by Apex Legends Update Notifier")
         _embed.set_timestamp()
