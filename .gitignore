@@ -11,3 +11,4 @@ venv/
 
 download.py
 *.json
+cloudbuild.yaml
