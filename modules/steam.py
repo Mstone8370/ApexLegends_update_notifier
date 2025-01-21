@@ -99,7 +99,7 @@ class Steam:
         self.logger.info("Cache raw data as {}".format(self.cache.tmp_data))
         utils.save_dict_as_json(_product_info, self.cache.tmp_data) # 받아온 raw 데이터를 파일로 임시로 로컬에 저장
 
-        self.old_result = copy.copy(self.new_result) # TODO: 생성자에서 이미 복사해서 다시 할 이유는 없을듯.
+        self.old_result = copy.copy(self.new_result) # 단발성인 경우 생성자에서 이미 복사해서 다시 할 이유는 없을듯.
         for _app in self.apps:
             key = _app.id + ":" + _app.filter
             self.logger.info(
@@ -158,7 +158,7 @@ class Steam:
                 utils.replace_file(self.cache.latest_data, self.cache.old_data) # latest였던 데이터를 old 데이터로 변경.
 
         self.logger.info("Cache filtered data as {}".format(self.cache.result))
-        utils.save_dict_as_json(self.new_result, self.cache.result) # 새로운 result를 파일로 저장. TODO: 클라우드에 저장되게 변경해야함
+        utils.save_dict_as_json(self.new_result, self.cache.result) # 새로운 result를 파일로 저장.
         utils.replace_file(self.cache.tmp_data, self.cache.latest_data) # 이번에 받아온 데이터인 tmp 파일을 latest 파일로 변경.
 
         return _is_updated, _updated_apps
